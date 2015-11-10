@@ -100,7 +100,7 @@ for g in grid_pairs:
 ######################### OKAY DONE TRAINING - LETS MAKE A SUBMISSION! ###########################
 
 
-final_model = best_models[np.argmax[best_scores]]
+final_model = best_models[np.argmax(best_scores)]
 
 predictions = final_model.predict(test)
 ids = [x['id'] for x in data_test]
