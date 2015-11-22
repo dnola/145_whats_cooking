@@ -20,7 +20,6 @@ with open('train.json') as f:
 with open('test.json') as f:
     data_test = json.loads(f.read())
 
-print("yo")
 
 # Go from JSON to bag of words in 6 lines of code because python is awesome
 train = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_train]
