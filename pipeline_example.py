@@ -1,126 +1,107 @@
 __author__ = 'davidnola'
 
 import json
-import xgboost
 import sklearn.pipeline as skpipe
 import sklearn.preprocessing as skpre
 import sklearn.feature_extraction as skfe
-from sklearn.base import TransformerMixin, BaseEstimator
-import sklearn.svm
 import sklearn.linear_model
+import sklearn.svm
 import sklearn.ensemble
-import sklearn.multiclass as skmulti
+import sklearn.cross_validation
 import numpy as np
-import itertools
+import sklearn.cross_validation
+from sklearn.metrics import accuracy_score
+import sklearn.grid_search
+import sklearn.feature_selection
 
-class Ensembler(TransformerMixin):
-    def __init__(self, model_name="LogReg",**kwargs):
-        if 'SVM' in model_name:
-            self.model = sklearn.svm.LinearSVC(**kwargs)
-        if 'LogReg' in model_name:
-            self.model = sklearn.linear_model.LogisticRegression(**kwargs)
-        if 'Forest' in model_name:
-            self.model = sklearn.ensemble.RandomForestClassifier(**kwargs)
-
-    def fit(self, x, y=None):
-        x = x.toarray()
-        chop = int(9*len(x)/10)
-        x=x[:chop]
-        self.model.fit(x,y[:chop])
-        return self
-
-    def transform(self, x):
-        x = x.toarray()
-        return [self.model.predict([z]) for z in x]
-
-class StackLabelEncoder(TransformerMixin):
-    def __init__(self, stack_encoder,**kwargs):
-        self.stack_encoder = stack_encoder
-
-    def fit(self, x, y=None):
-        return self.stack_encoder
-
-class Stacker(BaseEstimator):
-    def __init__(self, model_name="LogReg",**kwargs):
-        self.stack_encoder = stack_encoder
-        if 'SVM' in model_name:
-            self.model = sklearn.svm.LinearSVC(**kwargs)
-        if 'LogReg' in model_name:
-            self.model = sklearn.linear_model.LogisticRegression(**kwargs)
-        if 'Forest' in model_name:
-            self.model = sklearn.ensemble.RandomForestClassifier(**kwargs)
-
-    def fit(self, x, y=None):
-        x=x.toarray()
-        chop = int(9*len(x)/10)
-        x = x[chop:]
-        self.model.fit(x,y[chop:])
-        return self
-
-    def predict(self, x):
-        return self.model.predict(x)
-
-class Printer(TransformerMixin):
-    def fit(self, x, y=None):
-        #print("Fit: Samples each look like:",x[0])
-        # if y!=None:
-        #     print("Fit: Labels each look like:",y[0])
-        return self
-    def transform(self, x):
-        print("Transform: Samples each look like:",x[0])
-        return x
-    def predict(self, x):
-        print("Predict: Outputs each look like:",x[0])
-        return x
+# Import my stuff from ensembler.py
+from ensembler import StackEnsembleClassifier,Printer,DeSparsify,JSONtoBoW
 
 
 with open('train.json') as f:
-    data_train = json.loads(f.read())
+    train = json.loads(f.read())
 
 with open('test.json') as f:
-    data_test = json.loads(f.read())
+    test = json.loads(f.read())
 
-train = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_train]
-test = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_test]
+# train = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_train]
+# test = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_test]
 
-train_labels = [x['cuisine'] for x in data_train]
+train_labels = [x['cuisine'] for x in train]
 
 
+sub_pipe1 = skpipe.Pipeline([
+    ('encoder',skfe.text.CountVectorizer(max_features=100)),
+    ('printer3', Printer()),
+    ('clf', sklearn.svm.SVC()),
+    ])
 
-label_encoder = skpre.LabelEncoder()
-label_one_hot = skpre.OneHotEncoder()
-label_one_hot.fit(list(map(lambda x:[x], label_encoder.fit_transform(train_labels))))
-stack_encoder = lambda x : label_one_hot.transform(list(map(lambda x:[x],label_encoder.transform(x)))).toarray()
+sub_pipe2 = skpipe.Pipeline([
+    ('encoder',skfe.text.CountVectorizer(max_features=1000)),
+    ('clf', sklearn.linear_model.LogisticRegression()),
+    ])
 
-ensemble = skpipe.FeatureUnion([
-    ('ens1',Ensembler(model_name='LogReg',C=1)),
-    ('ens2',Ensembler(model_name='Forest',n_estimators=20)),
-])
+sub_pipe3 = skpipe.Pipeline([
+    ('encoder',skfe.text.CountVectorizer(max_features=5000)),
+    ('selector', sklearn.feature_selection.SelectKBest(sklearn.feature_selection.chi2, 500)),
+    ('clf', sklearn.linear_model.LogisticRegression()),
+    ])
+
+ensemble = StackEnsembleClassifier(
+    [
+        ('pipe1', sub_pipe1),
+        ('pipe2', sub_pipe2),
+        ('pipe3', sub_pipe3),
+
+    ],
+    ('top', sklearn.linear_model.LogisticRegression())
+)
 
 pipeline = skpipe.Pipeline([
-    ('printer0', Printer()),
-    ('encoder',skfe.text.CountVectorizer(max_features=100)),
     ('printer1', Printer()),
-    ('ensemble', ensemble),
+    ('BoW', JSONtoBoW()),
     ('printer2', Printer()),
-
+    ('ensemble', ensemble),
 ])
 
-print("Fitting Pipeline:")
-pipeline.fit(train,train_labels)
-print("Done Fitting, running predict:")
-predictions = pipeline.predict(test)
+def compare_models(pipeline):
+    print("Performing comparison:")
+    # Lets do a show down between the old model and the new one
+    encoder = skfe.text.CountVectorizer(max_features=1000)
+    old_scores = sklearn.cross_validation.cross_val_score(sklearn.linear_model.LogisticRegression(), encoder.fit_transform([",".join([y.replace(' ','') for y in x['ingredients']]) for x in train]), train_labels,cv=5,n_jobs=-1)
 
-exit()
+    # Next two lines doing the same thing as the CV line above,
+    # I just wanted to turn off the printing for the comparison and set the CountVectorizer to 1000 for the showdown so its a fair fight
+    # GridSearch is handy for temporarily setting parameters in the pipeline, so later we can call pipeline.fit() and still have it print out info and stuff
+    # Also I'll throw in an example of setting a nested parameter by setting the n_estimators of the GradientBoostingClassifier in the ensemble
+    # 'ensemble__item2__n_estimators':[15],
+    clf = sklearn.grid_search.GridSearchCV(pipeline,{},cv=5,n_jobs=-1,verbose=5)
+    clf.fit(train,train_labels)
 
-ids = [x['id'] for x in data_test]
+    print("Old best model average score over 5 folds is:" , np.mean(old_scores))
+    print("Pipeline average score over 5 folds is:" , np.mean(clf.best_score_))
 
-final_str = "id,cuisine"
-for idx,i in enumerate(ids):
-    final_str+="\n"
-    final_str+=str(i)
-    final_str+=","
-    final_str+=predictions[idx]
+def fit_and_save_scores(pipeline):
 
-with open('output.csv','w') as f:
-    f.write(final_str)
+    print("Fitting Pipeline:\n")
+    pipeline.fit(train,train_labels)
+    print("\nDone Fitting, running predict:\n")
+    predictions = pipeline.predict(test)
+
+    exit()
+
+    ids = [x['id'] for x in test]
+
+    final_str = "id,cuisine"
+    for idx,i in enumerate(ids):
+        final_str+="\n"
+        final_str+=str(i)
+        final_str+=","
+        final_str+=predictions[idx]
+
+    with open('output.csv','w') as f:
+        f.write(final_str)
+
+
+compare_models(pipeline)
+# fit_and_save_scores(pipeline)

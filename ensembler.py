@@ -1,17 +1,23 @@
 __author__ = 'davidnola'
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, TransformerMixin,ClassifierMixin
 from sklearn.externals.six import iteritems
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+import numpy as np
+import json
+import sklearn.feature_selection
 
-class StackEnsembleClassifier(BaseEstimator):
+class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
-    def __init__(self, base_classifiers, stack_classifier,hold_out_percent = .9,categorical_labels=True):
+    def __init__(self, base_classifiers, stack_classifier,hold_out_percent = .90,categorical_labels=True):
         self.base_classifiers = base_classifiers
-        self.all_items = stack_classifier+[stack_classifier]
+        self.stack_classifier = stack_classifier
+        self.all_items = base_classifiers+[stack_classifier]
         self.hold_out_percent = hold_out_percent
         self.categorical=categorical_labels
+        if categorical_labels==None:
+            self.categorical=True
 
 
     def fit(self, X, y=None):
@@ -19,15 +25,37 @@ class StackEnsembleClassifier(BaseEstimator):
             label_encoder = LabelEncoder()
             one_hot = OneHotEncoder()
             label_encoder.fit(y)
-            one_hot.fit(label_encoder.transform(y))
-            stack_encoder = lambda x: one_hot.transform(list(map(lambda x:[x],label_encoder.transform(x)))).toarray()
+            one_hot.fit(list(map(lambda x:[x],label_encoder.transform(y))))
+            self.stack_encoder = lambda x: one_hot.transform(list(map(lambda x:[x],label_encoder.transform(x)))).toarray()
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=1-self.hold_out_percent)
 
+        predictions = []
+        for (name, clf) in self.base_classifiers:
+            print("Ensemble currently fitting:",name)
+            clf.fit(X_train,y_train)
+            if self.categorical:
+                predictions.append(self.stack_encoder(clf.predict(X_test)))
+            else:
+                predictions.append(list(map(lambda x:[x], clf.predict(X_test))))
 
+        predictions = np.hstack(predictions)
+
+        self.stack_classifier[1].fit(predictions,y_test)
+
+        return self
 
     def predict(self, X):
-        pass
+        predictions = []
+        for (name, clf) in self.base_classifiers:
+            if self.categorical:
+                predictions.append(self.stack_encoder(clf.predict(X)))
+            else:
+                predictions.append(list(map(lambda x:[x], clf.predict(X))))
+
+        predictions = np.hstack(predictions)
+
+        return self.stack_classifier[1].predict(predictions)
 
     def get_params(self, deep=True):
         if not deep:
@@ -40,9 +68,37 @@ class StackEnsembleClassifier(BaseEstimator):
             out.update(super(StackEnsembleClassifier, self).get_params(deep=False))
             return out
 
+class JSONtoBoW(BaseEstimator,TransformerMixin):
+    def fit(self,x,y=None):
+        return self
+    def transform(self, data):
+        z = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data]
+        return z
+
+class DeSparsify(BaseEstimator,TransformerMixin):
+#  Anything in the middle of a pipeline needs a fit and a transform,
+#  If its only gonna be used in the last step of the pipeline, it can be fit and a predict instead,
+#  but you need to inherit from BaseEstimator
+    def fit(self,x,y=None):
+        return self
+    def transform(self, x):
+        return x.toarray()
+
+class Printer(BaseEstimator,TransformerMixin):
+    def __init__(self,silent=False):
+        self.silent=silent
+
+    def fit(self, x, y=None,silent=False):
+        # print("Fit step: Samples each look like:",x[0])
+        # if y!=None:
+        #      print("Fit: Labels each look like:",y[0])
+        if not self.silent:
+            print('Printer.fit() has been called')
+        return self
+    def transform(self, x):
+        if not self.silent:
+            print('Printer.transform() has been called')
+            print("Transform step: Samples each look like:",x[0],"\n")
+        return x
 
 
-# label_encoder = skpre.LabelEncoder()
-# label_one_hot = skpre.OneHotEncoder()
-# label_one_hot.fit(list(map(lambda x:[x], label_encoder.fit_transform(train_labels))))
-# stack_encoder = lambda x : label_one_hot.transform(list(map(lambda x:[x],label_encoder.transform(x)))).toarray()
