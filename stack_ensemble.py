@@ -100,7 +100,7 @@ ensemble = StackEnsembleClassifier(
     base_layer,
     ('top', sklearn.feature_selection.RFECV(sklearn.linear_model.LogisticRegression(penalty='l1')))
     # Recursive Feature Elimination - it keeps trying to get rid of features 1 by 1 to see if it improves CV score
-    # The theory here is that in the stack, some classifiers will be bad at predicting certain labels
+    # The theory here is that in the stack, some base classifiers will be bad at predicting certain labels
     # So we get rid of those predictions
 )
 
@@ -123,6 +123,9 @@ def compare_models(pipeline):
         'ensemble__refit_base': [True,False],
         'ensemble__hold_out_percent':[.9,.8,.7]
     }]
+
+    # params = {} # use default params
+
     clf = sklearn.grid_search.GridSearchCV(pipeline,params,cv=3,n_jobs=1,verbose=5)
     clf.fit(train,train_labels)
 
@@ -138,7 +141,6 @@ def fit_and_save_scores(pipeline):
     print("\nDone Fitting, running predict:\n")
     predictions = pipeline.predict(test)
 
-    exit()
 
     ids = [x['id'] for x in test]
 
@@ -149,9 +151,9 @@ def fit_and_save_scores(pipeline):
         final_str+=","
         final_str+=predictions[idx]
 
-    with open('output.csv','w') as f:
+    with open('ensemble_output.csv','w') as f:
         f.write(final_str)
 
 
 compare_models(pipeline)
-# fit_and_save_scores(pipeline)
+fit_and_save_scores(pipeline)

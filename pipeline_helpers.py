@@ -74,7 +74,7 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
         return self.stack_classifier[1].predict(predictions)
 
-    def get_params(self, deep=True):
+    def get_params(self, deep=True): # I stole this from the sklearn FeatureUnion code - it basically lets my model work with GridSearch
         if not deep:
             return super(StackEnsembleClassifier, self).get_params(deep=False)
         else:
@@ -121,10 +121,13 @@ class Printer(BaseEstimator,TransformerMixin):
     def transform(self, x):
         if not self.silent:
             print('Printer.transform() has been called')
-            if len(x[0]) < 40:
+            try:
+                if len(x[0]) < 40:
+                    print("Transform step: Samples each look like:",x[0],"\n")
+                else:
+                    print("Transform step: Samples each look like:",x[0][:39],"...(too long)... \n")
+            except:
                 print("Transform step: Samples each look like:",x[0],"\n")
-            else:
-                print("Transform step: Samples each look like:",x[0][:39],"...(too long)... \n")
         return x
 
 
