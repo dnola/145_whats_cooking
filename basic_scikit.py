@@ -10,7 +10,7 @@ import sklearn.preprocessing as skpp
 import sklearn.feature_extraction as skfe
 import numpy as np
 
-
+print('Valeed is checkin in!')
 print('Start!')
 
 # Load JSON Data into dicts:
