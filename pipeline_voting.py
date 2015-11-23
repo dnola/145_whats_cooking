@@ -30,7 +30,7 @@ train_labels = [x['cuisine'] for x in train]
 
 ####################################### Base pipeline construction and testing ##############################################################################
 
-silent = True # Set this to true to shut up the Printer()s
+silent = False # Set this to true to shut up the Printer()s
 
 
 # Build a base layer of classifiers - we check CV for each of them individually to see if it would be better to just use one of the classifiers instead of ensembling them
