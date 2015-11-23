@@ -123,7 +123,7 @@ params = [
 ]
 
 # If you don't want to wait forever:
-# uncomment the following line if you don't want to run a full grid search, and just want to use the parameters specified above
+# uncomment the following line if you don't want to run a full grid search, and just want to use the parameters specified in the pipelines
 # when the params list is empty, grid search just uses the default parameters
 
 # params = {}
