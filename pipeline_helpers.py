@@ -5,17 +5,21 @@ from sklearn.externals.six import iteritems
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 import numpy as np
+import sklearn.cluster
 import json
 import sklearn.feature_selection
+import random
+from nltk.stem import WordNetLemmatizer
 
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
-    def __init__(self, base_classifiers, stack_classifier,hold_out_percent = .90,categorical_labels=True):
+    def __init__(self, base_classifiers, stack_classifier,hold_out_percent = .90,categorical_labels=True,refit_base=True):
         self.base_classifiers = base_classifiers
         self.stack_classifier = stack_classifier
         self.all_items = base_classifiers+[stack_classifier]
         self.hold_out_percent = hold_out_percent
         self.categorical=categorical_labels
+        self.refit_base=refit_base
         if categorical_labels==None:
             self.categorical=True
 
@@ -41,7 +45,13 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
         predictions = np.hstack(predictions)
 
+        print("Fitting stack classifier")
         self.stack_classifier[1].fit(predictions,y_test)
+
+        if self.refit_base:
+            for (name, clf) in self.base_classifiers:
+                print("Ensemble currently refitting:",name)
+                clf.fit(X,y)
 
         return self
 
@@ -54,6 +64,13 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
                 predictions.append(list(map(lambda x:[x], clf.predict(X))))
 
         predictions = np.hstack(predictions)
+
+        try:
+            ranks = np.split(self.stack_classifier[1].ranking_, len(self.base_classifiers))
+            ranks = [np.mean(x) for x in ranks]
+            print("Ensemble Rankings (Lower is better):", ranks)
+        except:
+            pass
 
         return self.stack_classifier[1].predict(predictions)
 
@@ -68,11 +85,17 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
             out.update(super(StackEnsembleClassifier, self).get_params(deep=False))
             return out
 
-class JSONtoBoW(BaseEstimator,TransformerMixin):
+
+class JSONtoString(BaseEstimator,TransformerMixin):
+    def __init__(self,remove_spaces=False):
+        self.remove_spaces = remove_spaces
     def fit(self,x,y=None):
         return self
     def transform(self, data):
-        z = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data]
+        if self.remove_spaces:
+            z = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data]
+        else:
+            z = [",".join([y for y in x['ingredients']]).lower() for x in data]
         return z
 
 class DeSparsify(BaseEstimator,TransformerMixin):
@@ -84,21 +107,24 @@ class DeSparsify(BaseEstimator,TransformerMixin):
     def transform(self, x):
         return x.toarray()
 
+class DBScanTransformer(sklearn.cluster.DBSCAN):
+    def transform(self, x):
+        return self.fit_predict(x)
+
 class Printer(BaseEstimator,TransformerMixin):
     def __init__(self,silent=False):
         self.silent=silent
-
-    def fit(self, x, y=None,silent=False):
-        # print("Fit step: Samples each look like:",x[0])
-        # if y!=None:
-        #      print("Fit: Labels each look like:",y[0])
+    def fit(self, x, y=None):
         if not self.silent:
             print('Printer.fit() has been called')
         return self
     def transform(self, x):
         if not self.silent:
             print('Printer.transform() has been called')
-            print("Transform step: Samples each look like:",x[0],"\n")
+            if len(x[0]) < 40:
+                print("Transform step: Samples each look like:",x[0],"\n")
+            else:
+                print("Transform step: Samples each look like:",x[0][:39],"...(too long)... \n")
         return x
 
 
