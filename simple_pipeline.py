@@ -1,10 +1,12 @@
 __author__ = 'davidnola'
 
+import json
+
 import sklearn.pipeline as skpipe
 import sklearn.cross_validation
 import sklearn.feature_extraction as skfe
 import numpy as np
-import json
+
 
 # import my stuff from pipeline_helpers.py
 from pipeline_helpers import Printer,DeSparsify,JSONtoString

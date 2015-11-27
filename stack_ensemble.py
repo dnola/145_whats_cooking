@@ -11,7 +11,6 @@ But they only work like half the time...
 
 import json
 import sklearn.pipeline as skpipe
-import sklearn.preprocessing as skpre
 import sklearn.feature_extraction as skfe
 import sklearn.linear_model
 import sklearn.svm
@@ -19,13 +18,12 @@ import sklearn.ensemble
 import sklearn.cross_validation
 import numpy as np
 import sklearn.cross_validation
-from sklearn.metrics import accuracy_score
 import sklearn.grid_search
 import sklearn.feature_selection
 import sklearn.neighbors
 import sklearn.cluster
 # Import my stuff from pipeline_helpers.py
-from pipeline_helpers import StackEnsembleClassifier,Printer,DeSparsify,JSONtoString,DBScanTransformer
+from pipeline_helpers import StackEnsembleClassifier, JSONtoString
 
 
 # Load up data. We transform it inside the pipeline now, so no need to preprocess

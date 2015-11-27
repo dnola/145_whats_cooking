@@ -6,10 +6,8 @@ from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 import numpy as np
 import sklearn.cluster
-import json
 import sklearn.feature_selection
-import random
-from nltk.stem import WordNetLemmatizer
+
 
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 

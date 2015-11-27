@@ -1,12 +1,10 @@
 __author__ = 'davidnola'
 
-import os
 import json
 import sklearn as sk
 import sklearn.linear_model
 import sklearn.ensemble
 import sklearn.multiclass
-import sklearn.preprocessing as skpp
 import sklearn.feature_extraction as skfe
 import numpy as np
 

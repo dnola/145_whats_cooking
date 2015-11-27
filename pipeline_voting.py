@@ -15,7 +15,7 @@ import sklearn.neighbors
 import sklearn.cluster
 
 # Import my stuff from pipeline_helpers.py
-from pipeline_helpers import StackEnsembleClassifier,Printer,DeSparsify,JSONtoString,DBScanTransformer
+from pipeline_helpers import Printer,DeSparsify,JSONtoString
 
 ############################################################# Loading data ##############################################################################
 
