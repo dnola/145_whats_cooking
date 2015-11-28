@@ -9,7 +9,7 @@ import sklearn.cluster
 import json
 import sklearn.feature_selection
 import random
-from nltk.stem import WordNetLemmatizer
+
 
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
