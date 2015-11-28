@@ -9,7 +9,8 @@ import sklearn.cluster
 import json
 import sklearn.feature_selection
 import random
-from nltk.stem import WordNetLemmatizer
+import pickle
+
 
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
@@ -84,6 +85,20 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
                     out['%s__%s' % (name, key)] = value
             out.update(super(StackEnsembleClassifier, self).get_params(deep=False))
             return out
+
+class PredictionLoader(BaseEstimator):
+    def __init__(self, filename):
+        self.filename=filename
+
+    def fit(self,X,y=None):
+        print("Getting predictions from:",self.filename)
+        self.predictions = pickle.load(open(self.filename,'rb'))
+        if type(y[0]) is np.int64 or type(y[0]) is np.int32 or type(y[0]) is int: # Because the voter LabelEncodes its 'y's, we have to do it too. We detect that we are bing called by VoterClassifier by checking the type of the label we are to predict. Voters use ints.
+            self.predictions = LabelEncoder().fit_transform(self.predictions)
+        return self
+
+    def predict(self,X):
+        return self.predictions
 
 
 class JSONtoString(BaseEstimator,TransformerMixin):

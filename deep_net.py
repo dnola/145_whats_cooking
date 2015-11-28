@@ -47,43 +47,28 @@ net = PipelineNet(
         ('dropout0', DropoutLayer),
         ('dense2', layers.DenseLayer),
         ('maxout2', layers.FeaturePoolLayer),
-        ('dropout1', DropoutLayer),
-        ('dense3', layers.DenseLayer),
-        ('maxout3', layers.FeaturePoolLayer),
-        ('dropout2', DropoutLayer),
-        ('dense4', layers.DenseLayer),
-        ('maxout4', layers.FeaturePoolLayer),
-        ('dropout3', DropoutLayer),
+
         ('output', layers.DenseLayer),
         ],
 
     # layer specs:
     dense_num_units=2048,dense_W=GlorotUniform(),
     maxout_pool_size=2,
-    dropout0_p=.2,
+    dropout0_p=.1,
 
     dense2_num_units=1024,dense2_W=GlorotUniform(),
     maxout2_pool_size=2,
-    dropout1_p=.2,
-
-    dense3_num_units=512,dense3_W=GlorotUniform(),
-    maxout3_pool_size=2,
-    dropout2_p=.2,
-
-    dense4_num_units=512,dense4_W=GlorotUniform(),
-    maxout4_pool_size=2,
-    dropout3_p=.2,
 
     # network hyperparams:
 
     on_epoch_finished=[EarlyStopping()],
  
     update=nesterov_momentum,
-    update_learning_rate=theano.shared(float32(0.15)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
-    update_momentum=theano.shared(float32(0.95)), # Use a some of last epoch's gradient as well when updating weights - too high and you overshoot minimum
+    update_learning_rate=theano.shared(float32(0.1)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
+    update_momentum=theano.shared(float32(0.90)), # Use a some of last epoch's gradient as well when updating weights - too high and you overshoot minimum
  
     regression=True, # Always just set this to true. Even when you aren't doing regression.
-    max_epochs=5,
+    max_epochs=750,
     verbose=1
     )
 

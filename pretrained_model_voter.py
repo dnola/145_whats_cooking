@@ -20,7 +20,7 @@ from pipeline_helpers import Printer,DeSparsify,JSONtoString,PredictionLoader
 
 # Important Note: When using a pretrained model, the model was trained on all of the training data, meaning there is no way to accurately cross validate
 # If you want to cross validate, you will need to actually use the pipeline in deep_net.py - which is very time consuming
-# And more or less needs CUDA if you want it to finish in a reasonable amount of time
+# and to do that you more or less need CUDA if you want it to finish in a reasonable amount of time
 # So we can't grid search or anything with this script. Our best bet is to either A - do a giant time consuming grid search while not using pretrained models,
 # or B - optimize the pipelines separately without the neural net, only adding in the pretrained net to the voter for the final prediction - as we do here
 
