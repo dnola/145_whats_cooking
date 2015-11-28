@@ -14,13 +14,10 @@ import pickle
 import json
 
 import theano
-import lasagne
 from lasagne import layers
 from lasagne.updates import nesterov_momentum
-from nolearn.lasagne import NeuralNet
 import sklearn.grid_search
 from lasagne.init import GlorotUniform
-import numpy as np
 import sklearn.pipeline as skpipe
 import sklearn.feature_extraction as skfe
 import sklearn.cross_validation
@@ -29,7 +26,6 @@ from lasagne.layers import DropoutLayer
 
 from pipeline_helpers import Printer,DeSparsify,JSONtoString
 from deep_net_helpers import float32, EarlyStopping,PipelineNet
-from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 
 with open('train.json', encoding='utf-8') as f:
     train = json.loads(f.read())
@@ -91,26 +87,8 @@ net = PipelineNet(
     verbose=1
     )
 
-##############
 
-# label_encoder = LabelEncoder()
-# one_hot = OneHotEncoder()
-#
-# # train_labels = list(map(lambda x:[x],label_encoder.fit_transform(train_labels)))
-# # train_labels = np.array(one_hot.fit_transform(train_labels).toarray(),dtype=np.float32)
-# train = JSONtoString().fit_transform(train)
-# train = skfe.text.CountVectorizer(strip_accents='unicode',stop_words='english').fit_transform(train).toarray()
-# train = np.array(train,dtype=np.float32)
-#
-# model = sklearn.grid_search.GridSearchCV(net,{},cv=3,verbose=10,n_jobs=1)
-# model.fit(train,train_labels)
-#
-#
-# print("Average score over 3 folds is:" , model.best_score_)
-#
-# exit()
-
-##############
+# Preprocessing pipeline
 pipe = skpipe.Pipeline([
     ('stringify_json', JSONtoString()),
     ('printer1', Printer()),
@@ -121,15 +99,16 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.GridSearchCV(pipe,{},cv=3,n_jobs=1,verbose=10)
+model = sklearn.grid_search.GridSearchCV(pipe,{},cv=2,n_jobs=1,verbose=10)
 model.fit(train,train_labels)
 
-pickle.dump(model,open('net_pipeline.pkl','wb'),-1)
-
 print("Average score over 2 folds is:" , model.best_score_)
-# pipe.fit(train,train_labels)
+
+# Now generate predictions and dump them to disk, as well as submittable CSV form
 
 preds = model.predict(test)
+
+pickle.dump(preds,open('net_predictions.pkl','wb'))
 
 print("writing to disk...")
 ids = [x['id'] for x in test]

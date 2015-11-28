@@ -2,10 +2,7 @@ __author__ = 'davidnola'
 
 import numpy as np
 from nolearn.lasagne import NeuralNet
-from sklearn.base import BaseEstimator, TransformerMixin,ClassifierMixin
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
-import pickle
-import sys
 import sklearn.metrics
 import lasagne.nonlinearities
 
