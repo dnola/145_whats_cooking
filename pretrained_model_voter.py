@@ -15,6 +15,8 @@ import sklearn.neighbors
 import sklearn.cluster
 import numpy as np
 import pickle
+import xgboost as xgb
+
 
 from pipeline_helpers import Printer,DeSparsify,JSONtoString,PredictionLoader
 
@@ -86,6 +88,13 @@ sub_pipe3 = skpipe.Pipeline([
     ])
 
 
+pipexg = skpipe.Pipeline([
+    ('stringify_json', JSONtoString()),
+    ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
+    ('desparsify', DeSparsify()),
+    ('clf', xgb.XGBClassifier(max_depth=24,objective="multi:softmax",n_estimators=200,silent=False)),
+    ])
+
 
 
 ####################################### Voter pipeline construction ###################################################################
@@ -97,7 +106,8 @@ base_layer = [
         ('pipe1', sub_pipe1),
         ('pipe2', sub_pipe2),
         ('pipe3', sub_pipe3),
-        ('net', net)
+        ('net', net),
+        ('xg', pipexg)
     ]
 
 # Most unnecessary pipeline ever...

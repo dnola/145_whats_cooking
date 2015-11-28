@@ -9,10 +9,10 @@ import json
 
 from pipeline_helpers import Printer,DeSparsify,JSONtoString
 
-with open('train.json') as f:
+with open('train.json', encoding='utf-8') as f:
     train = json.loads(f.read())
 
-with open('test.json') as f:
+with open('test.json', encoding='utf-8') as f:
     test = json.loads(f.read())
 
 train_labels = [x['cuisine'] for x in train]
@@ -22,7 +22,7 @@ pipe = skpipe.Pipeline([
     ('stringify_json', JSONtoString()),
     ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
     ('desparsify', DeSparsify()),
-    ('clf', xgb.XGBClassifier(max_depth=20,objective="multi:softmax",n_estimators=10,silent=False)),
+    ('clf', xgb.XGBClassifier(max_depth=24,objective="multi:softmax",n_estimators=200,silent=False)),
     ])
 
 print("Fitting pipeline:")
