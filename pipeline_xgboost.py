@@ -8,7 +8,6 @@ import numpy as np
 import json
 
 from pipeline_helpers import Printer,DeSparsify,JSONtoString
-from xgboost_helpers import XGBClassifier
 
 with open('train.json') as f:
     train = json.loads(f.read())
