@@ -47,17 +47,19 @@ net = PipelineNet(
         ('dropout0', DropoutLayer),
         ('dense2', layers.DenseLayer),
         ('maxout2', layers.FeaturePoolLayer),
+        ('dropout1', DropoutLayer),
 
         ('output', layers.DenseLayer),
         ],
 
     # layer specs:
-    dense_num_units=2048,dense_W=GlorotUniform(),
-    maxout_pool_size=2,
+    dense_num_units=10000,dense_W=GlorotUniform(),
+    maxout_pool_size=5,
     dropout0_p=.1,
 
-    dense2_num_units=1024,dense2_W=GlorotUniform(),
-    maxout2_pool_size=2,
+    dense2_num_units=5000,dense2_W=GlorotUniform(),
+    maxout2_pool_size=5,
+
 
     # network hyperparams:
 
@@ -93,7 +95,7 @@ print("Average score over 2 folds is:" , model.best_score_)
 
 preds = model.predict(test)
 
-pickle.dump(preds,open('net_predictions.pkl','wb'))
+pickle.dump(preds,open('net_predictions2.pkl','wb'))
 
 print("writing to disk...")
 ids = [x['id'] for x in test]
