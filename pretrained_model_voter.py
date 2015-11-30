@@ -114,7 +114,7 @@ base_layer = [
 
 # Most unnecessary pipeline ever...
 voter_pipeline = skpipe.Pipeline([
-    ('voter', sklearn.ensemble.VotingClassifier(base_layer,weights=[3,2,1,1,2,2])),
+    ('voter', sklearn.ensemble.VotingClassifier(base_layer,weights=[2,1,1,1,1,1])),
 ])
 print("Fitting voter...")
 voter_pipeline.fit(train,train_labels)
