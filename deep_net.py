@@ -54,11 +54,11 @@ net = PipelineNet(
 
     # layer specs:
     dense_num_units=10000,dense_W=GlorotUniform(),
-    maxout_pool_size=5,
+    maxout_pool_size=2,
     dropout0_p=.1,
 
     dense2_num_units=5000,dense2_W=GlorotUniform(),
-    maxout2_pool_size=5,
+    maxout2_pool_size=2,
 
 
     # network hyperparams:
@@ -86,16 +86,19 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.GridSearchCV(pipe,{},cv=2,n_jobs=1,verbose=10)
+model = sklearn.grid_search.GridSearchCV(pipe,[{'clf__dense_num_units':[4000,8000], 'clf__dense2_num_units':[500,1000,2000]}],cv=2,n_jobs=1,verbose=10)
 model.fit(train,train_labels)
 
 print("Average score over 2 folds is:" , model.best_score_)
+
 
 # Now generate predictions and dump them to disk, as well as submittable CSV form
 
 preds = model.predict(test)
 
 pickle.dump(preds,open('net_predictions2.pkl','wb'))
+
+print("Best params::" , model.best_params_)
 
 print("writing to disk...")
 ids = [x['id'] for x in test]
