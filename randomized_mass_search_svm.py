@@ -7,12 +7,11 @@ if __name__ == '__main__':
     import sklearn.cross_validation
     import sklearn.grid_search
     import sklearn.feature_extraction as skfe
-    import numpy as np
     import json
     import pickle
 
     # import my stuff from pipeline_helpers.py
-    from pipeline_helpers import Printer,DeSparsify,JSONtoString
+    from pipeline_helpers import JSONtoString
     # Load up data. We transform it inside the pipeline now, so no need to preprocess
     with open('train.json') as f:
         train = json.loads(f.read())

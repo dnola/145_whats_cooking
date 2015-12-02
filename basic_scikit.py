@@ -1,12 +1,13 @@
 __author__ = 'davidnola'
 
 import json
-import sklearn as sk
-import sklearn.linear_model
-import sklearn.ensemble
-import sklearn.multiclass
-import sklearn.feature_extraction as skfe
+
 import numpy as np
+import sklearn as sk
+import sklearn.ensemble
+import sklearn.feature_extraction as skfe
+import sklearn.linear_model
+import sklearn.multiclass
 
 print('Start!')
 

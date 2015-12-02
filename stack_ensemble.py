@@ -8,20 +8,20 @@ But they only work like half the time...
 
 """
 
-
 import json
-import sklearn.pipeline as skpipe
-import sklearn.feature_extraction as skfe
-import sklearn.linear_model
-import sklearn.svm
-import sklearn.ensemble
-import sklearn.cross_validation
+
 import numpy as np
-import sklearn.cross_validation
-import sklearn.grid_search
-import sklearn.feature_selection
-import sklearn.neighbors
 import sklearn.cluster
+import sklearn.cross_validation
+import sklearn.cross_validation
+import sklearn.ensemble
+import sklearn.feature_extraction as skfe
+import sklearn.feature_selection
+import sklearn.grid_search
+import sklearn.linear_model
+import sklearn.neighbors
+import sklearn.pipeline as skpipe
+import sklearn.svm
 # Import my stuff from pipeline_helpers.py
 from pipeline_helpers import StackEnsembleClassifier, JSONtoString
 

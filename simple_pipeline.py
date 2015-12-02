@@ -2,10 +2,10 @@ __author__ = 'davidnola'
 
 import json
 
-import sklearn.pipeline as skpipe
+import numpy as np
 import sklearn.cross_validation
 import sklearn.feature_extraction as skfe
-import numpy as np
+import sklearn.pipeline as skpipe
 
 
 # import my stuff from pipeline_helpers.py
@@ -25,7 +25,7 @@ silent = False # set to True to shut up the printers
 
 pipe = skpipe.Pipeline([
     ('printer0', Printer(silent)), # This prints out what the data currently looks like. Pipelines work by sequentially transforming the data step by step - so this Printer() will help you to see how those transformations go
-    ('stringify_json', JSONtoString()),
+    ('stringify_json', JSONtoString(remove_spaces=False,use_stemmer=True)),
     ('printer1', Printer(silent)),
     ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
     ('printer2', Printer(silent)),

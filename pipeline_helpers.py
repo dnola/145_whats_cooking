@@ -1,15 +1,14 @@
 __author__ = 'davidnola'
 
-from sklearn.base import BaseEstimator, TransformerMixin,ClassifierMixin
-from sklearn.externals.six import iteritems
-from sklearn.cross_validation import train_test_split
-from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+import pickle
+
 import numpy as np
 import sklearn.cluster
-import json
 import sklearn.feature_selection
-import random
-import pickle
+from sklearn.base import BaseEstimator, TransformerMixin,ClassifierMixin
+from sklearn.cross_validation import train_test_split
+from sklearn.externals.six import iteritems
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 
 
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
@@ -102,15 +101,30 @@ class PredictionLoader(BaseEstimator):
 
 
 class JSONtoString(BaseEstimator,TransformerMixin):
-    def __init__(self,remove_spaces=False):
+    def __init__(self,remove_spaces=False,use_stemmer=True,remove_symbols=True):
         self.remove_spaces = remove_spaces
+        self.use_stemmer = use_stemmer
+        self.remove_symbols = remove_symbols
     def fit(self,x,y=None):
         return self
     def transform(self, data):
-        if self.remove_spaces:
-            z = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data]
+        if self.remove_symbols:
+            rem_sym = lambda s:"".join([ c if c.isalnum() else " " for c in s ])
         else:
-            z = [",".join([y for y in x['ingredients']]).lower() for x in data]
+            rem_sym = lambda s:s
+        if not self.use_stemmer:
+            if self.remove_spaces:
+                z = [",".join([rem_sym(y).replace(' ','') for y in x['ingredients']]) for x in data]
+            else:
+                z = [",".join([rem_sym(y) for y in x['ingredients']]).lower() for x in data]
+        else:
+            from nltk.stem import WordNetLemmatizer
+            lemma = WordNetLemmatizer()
+
+            if self.remove_spaces:
+                z = [",".join([lemma.lemmatize(rem_sym(y).replace(' ','')) for y in x['ingredients']]) for x in data]
+            else:
+                z = [",".join([",".join([lemma.lemmatize(yy) for yy in rem_sym(y).split(" ")]) for y in x['ingredients']]).lower() for x in data]
         return z
 
 class DeSparsify(BaseEstimator,TransformerMixin):

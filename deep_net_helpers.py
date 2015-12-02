@@ -1,11 +1,10 @@
 __author__ = 'davidnola'
 
+import lasagne.nonlinearities
 import numpy as np
+import sklearn.metrics
 from nolearn.lasagne import NeuralNet
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
-import sklearn.metrics
-import lasagne.nonlinearities
-
 
 
 # Neural Net for 1d samples and categorical labels:

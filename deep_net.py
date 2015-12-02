@@ -10,22 +10,21 @@ __author__ = 'davidnola'
 
 
 
-import pickle
 import json
+import pickle
 
+import sklearn.cross_validation
+import sklearn.feature_extraction as skfe
+import sklearn.grid_search
+import sklearn.pipeline as skpipe
 import theano
 from lasagne import layers
-from lasagne.updates import nesterov_momentum
-import sklearn.grid_search
 from lasagne.init import GlorotUniform
-import sklearn.pipeline as skpipe
-import sklearn.feature_extraction as skfe
-import sklearn.cross_validation
 from lasagne.layers import DropoutLayer
+from lasagne.updates import nesterov_momentum
 
-
-from pipeline_helpers import Printer,DeSparsify,JSONtoString
 from deep_net_helpers import float32, EarlyStopping,PipelineNet
+from pipeline_helpers import Printer,DeSparsify,JSONtoString
 
 with open('train.json', encoding='utf-8') as f:
     train = json.loads(f.read())
@@ -48,7 +47,8 @@ net = PipelineNet(
         ('dense2', layers.DenseLayer),
         ('maxout2', layers.FeaturePoolLayer),
         ('dropout1', DropoutLayer),
-
+        ('dense3', layers.DenseLayer),
+        ('maxout3', layers.FeaturePoolLayer),
         ('output', layers.DenseLayer),
         ],
 
@@ -57,8 +57,11 @@ net = PipelineNet(
     maxout_pool_size=2,
     dropout0_p=.1,
 
-    dense2_num_units=5000,dense2_W=GlorotUniform(),
+    dense2_num_units=500,dense2_W=GlorotUniform(),
     maxout2_pool_size=2,
+
+    dense3_num_units=500,dense3_W=GlorotUniform(),
+    maxout3_pool_size=2,
 
 
     # network hyperparams:
@@ -66,7 +69,7 @@ net = PipelineNet(
     on_epoch_finished=[EarlyStopping()],
  
     update=nesterov_momentum,
-    update_learning_rate=theano.shared(float32(0.1)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
+    update_learning_rate=theano.shared(float32(0.15)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
     update_momentum=theano.shared(float32(0.90)), # Use a some of last epoch's gradient as well when updating weights - too high and you overshoot minimum
  
     regression=True, # Always just set this to true. Even when you aren't doing regression.
@@ -86,7 +89,7 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.GridSearchCV(pipe,[{'clf__dense_num_units':[4000,8000], 'clf__dense2_num_units':[500,1000,2000]}],cv=2,n_jobs=1,verbose=10)
+model = sklearn.grid_search.GridSearchCV(pipe,[{'clf__dense_num_units':[8000], 'clf__dense2_num_units':[500,1000], 'clf__dense3_num_units':[100,300,500,700]}],cv=2,n_jobs=1,verbose=10)
 model.fit(train,train_labels)
 
 print("Average score over 2 folds is:" , model.best_score_)
@@ -96,7 +99,7 @@ print("Average score over 2 folds is:" , model.best_score_)
 
 preds = model.predict(test)
 
-pickle.dump(preds,open('net_predictions2.pkl','wb'))
+pickle.dump(preds,open('net_predictions3.pkl','wb'))
 
 print("Best params::" , model.best_params_)
 
@@ -112,3 +115,5 @@ for idx,i in enumerate(ids):
 
 with open('net_output.csv','w') as f:
     f.write(final_str)
+
+print("Best params::" , model.best_params_)
