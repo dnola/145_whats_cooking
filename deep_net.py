@@ -21,9 +21,10 @@ import theano
 from lasagne import layers
 from lasagne.init import GlorotUniform
 from lasagne.layers import DropoutLayer
+import lasagne.nonlinearities
 from lasagne.updates import nesterov_momentum
 
-from deep_net_helpers import float32, EarlyStopping,PipelineNet
+from deep_net_helpers import float32, EarlyStopping,PipelineNet, AdjustVariable
 from pipeline_helpers import Printer,DeSparsify,JSONtoString
 
 with open('train.json', encoding='utf-8') as f:
@@ -47,29 +48,27 @@ net = PipelineNet(
         ('dense2', layers.DenseLayer),
         ('maxout2', layers.FeaturePoolLayer),
         ('dropout1', DropoutLayer),
-        ('dense3', layers.DenseLayer),
-        ('maxout3', layers.FeaturePoolLayer),
+
         ('output', layers.DenseLayer),
         ],
 
     # layer specs:
-    dense_num_units=10000,dense_W=GlorotUniform(),
+    dense_num_units=10000,dense_W=GlorotUniform(),#dense_nonlinearity=lasagne.nonlinearities.LeakyRectify(),
     maxout_pool_size=2,
-    dropout0_p=.1,
+    dropout0_p=.3,
 
-    dense2_num_units=500,dense2_W=GlorotUniform(),
+    dense2_num_units=500,dense2_W=GlorotUniform(),#dense2_nonlinearity=lasagne.nonlinearities.LeakyRectify(),
     maxout2_pool_size=2,
+    dropout1_p=.1,
 
-    dense3_num_units=500,dense3_W=GlorotUniform(),
-    maxout3_pool_size=2,
 
 
     # network hyperparams:
 
-    on_epoch_finished=[EarlyStopping()],
+    on_epoch_finished=[EarlyStopping(),AdjustVariable('update_learning_rate', start=0.05, stop=0.0001),AdjustVariable('update_momentum', start=0.9, stop=0.99)],
  
     update=nesterov_momentum,
-    update_learning_rate=theano.shared(float32(0.15)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
+    update_learning_rate=theano.shared(float32(0.1)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
     update_momentum=theano.shared(float32(0.90)), # Use a some of last epoch's gradient as well when updating weights - too high and you overshoot minimum
  
     regression=True, # Always just set this to true. Even when you aren't doing regression.
@@ -80,7 +79,7 @@ net = PipelineNet(
 
 # Preprocessing pipeline
 pipe = skpipe.Pipeline([
-    ('stringify_json', JSONtoString()),
+    ('stringify_json', JSONtoString(remove_spaces=False,use_stemmer=True,remove_symbols=True)),
     ('printer1', Printer()),
     ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
     ('printer2', Printer()),
@@ -89,7 +88,9 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.GridSearchCV(pipe,[{'clf__dense_num_units':[8000], 'clf__dense2_num_units':[500,1000], 'clf__dense3_num_units':[100,300,500,700]}],cv=2,n_jobs=1,verbose=10)
+model = sklearn.grid_search.RandomizedSearchCV(pipe,{'clf__dense_num_units':[1000,2000,500],
+                                                     'clf__dense2_num_units':[500,200,1000],'encoder__max_df':[1.0,.8, .6],
+                                                     'clf__dropout0_p':[.3,.1, 0],'clf__maxout_pool_size':[2,4],'clf__dropout1_p':[.3,.1, 0],'clf__maxout2_pool_size':[2,4],'stringify_json__use_stemmer':[True,False]},cv=2,n_jobs=1,verbose=10, n_iter=18)
 model.fit(train,train_labels)
 
 print("Average score over 2 folds is:" , model.best_score_)
@@ -117,3 +118,4 @@ with open('net_output.csv','w') as f:
     f.write(final_str)
 
 print("Best params::" , model.best_params_)
+print("Best score over 2 folds is:" , model.best_score_)
