@@ -37,10 +37,9 @@ class BinarizedLabelOptimizer(BaseEstimator,TransformerMixin):
             'stringify_json__remove_spaces':[True,False],
             'stringify_json__remove_symbols':[True,False],
             'stringify_json__use_stemmer':[True,False],
-            'encoder__ngram_range':[(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7)],
-            'encoder__max_df':[.90,.85,.80,.70,.60,.50],
-            'encoder__min_df':[1,.1],
-            'clf__C':[.1,.3,.5,.6,.7,.8,.9],
+            'encoder__ngram_range':[(1,1),(1,2),(1,3),(1,4),(1,5)],
+            'encoder__max_df':[1,.90,.85,.80,.70,.60,.50],
+            'clf__C':[.5,.6,.7,.8,.9,1],
             'clf__class_weight':['balanced',None,None,None]
         }
 
@@ -50,7 +49,7 @@ class BinarizedLabelOptimizer(BaseEstimator,TransformerMixin):
             ('clf', sklearn.svm.SVC(kernel='linear',probability=True, C=.7))
             ])
 
-        search = sklearn.grid_search.RandomizedSearchCV(pipe,params,n_iter=15,n_jobs=-1,cv=3,verbose=10)
+        search = sklearn.grid_search.RandomizedSearchCV(pipe,params,n_iter=20,n_jobs=-1,cv=3,verbose=10)
 
         self.model_dict = {key:copy.deepcopy(search).fit(X, [1 if key in lab else 0 for lab in y]) for key in self.labels}
         for key,value in self.model_dict.items():
@@ -85,11 +84,11 @@ final_pipe = skpipe.Pipeline([
     # ('ensembler', sklearn.linear_model.LogisticRegression())
 ])
 
-X_train, X_test, y_train, y_test = cv.train_test_split(train, train_labels, test_size=0.20,)
-final_pipe.fit(X_train,y_train)
-score = final_pipe.score(X_test,y_test)
-print("Final Score:", score)
-
+# X_train, X_test, y_train, y_test = cv.train_test_split(train, train_labels, test_size=0.20,)
+# final_pipe.fit(X_train,y_train)
+# score = final_pipe.score(X_test,y_test)
+# print("Final Score:", score)
+#
 
 final_pipe.fit(train,train_labels)
 predictions = final_pipe.predict(test)
