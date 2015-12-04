@@ -1,5 +1,3 @@
-__author__ = 'davidnola'
-
 import lasagne.nonlinearities
 import numpy as np
 import sklearn.metrics
@@ -36,6 +34,8 @@ class PipelineNet(NeuralNet): # By default Lasagne is super finicky with inputs 
     def score(self, X, y):
         return sklearn.metrics.accuracy_score(self.predict(X),y)
 
+
+# SOURCE FOR NEXT TWO CLASSES: http://danielnouri.org/notes/2014/12/17/using-convolutional-neural-nets-to-detect-facial-keypoints-tutorial/
 
 class EarlyStopping(object): # I took this from Nouri's tutorial - Nouri is the guy who made lasagne and nolearn. He really should have included this code by default.
     def __init__(self, patience=50):

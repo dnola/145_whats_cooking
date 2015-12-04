@@ -1,5 +1,3 @@
-__author__ = 'davidnola'
-
 import json
 
 import numpy as np
@@ -7,8 +5,9 @@ import sklearn.cross_validation
 import sklearn.feature_extraction as skfe
 import sklearn.pipeline as skpipe
 
+# Basic pipeline tutorial
 
-# import my stuff from pipeline_helpers.py
+# import stuff from pipeline_helpers.py
 from pipeline_helpers import Printer,DeSparsify,JSONtoString
 
 # Load up data. We transform it inside the pipeline now, so no need to preprocess

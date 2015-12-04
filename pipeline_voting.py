@@ -1,5 +1,3 @@
-__author__ = 'davidnola'
-
 import json
 
 import numpy as np
@@ -30,7 +28,7 @@ train_labels = [x['cuisine'] for x in train]
 
 ####################################### Base pipeline construction and testing ##############################################################################
 
-silent = False # Set this to true to shut up the Printer()s
+silent = True # Set this to true to shut up the Printer()s
 
 
 # Build a base layer of classifiers - we check CV for each of them individually to see if it would be better to just use one of the classifiers instead of ensembling them
@@ -39,11 +37,11 @@ print('First, check pipeline by pipeline to make sure voter ensembling them all 
 print('\ntesting pipe0...')
 sub_pipe0 = skpipe.Pipeline([
     ('printer0', Printer(silent)), # This prints out what the data currently looks like. Pipelines work by sequentially transforming the data step by step - so this Printer() will help you to see how those transformations go
-    ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
+    ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english',max_df=.7,sublinear_tf=True)),
     ('printer1', Printer(silent)),
     ('desparsify', DeSparsify()), # not necessary to desparsify for SVC, but helps you see how pipelines work
     ('printer2', Printer(silent)),
-    ('clf', sklearn.svm.LinearSVC()),
+    ('clf', sklearn.svm.LinearSVC(C=.7)),
     ])
 print('pipe0 score:',np.mean(sklearn.cross_validation.cross_val_score(sub_pipe0, JSONtoString().transform(train), train_labels,cv=2,n_jobs=1))) #CV=2, so you will see each pipeline run 2 times
 
@@ -77,7 +75,7 @@ sub_pipe3 = skpipe.Pipeline([
         ('encoder1',skfe.text.CountVectorizer(strip_accents='unicode',stop_words='english',max_features=1500)),
         ('encoder2',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english',max_features=1500)),
         ])),
-    ('clf', sklearn.ensemble.ExtraTreesClassifier(n_estimators=300,n_jobs=-1)),
+    ('clf', sklearn.ensemble.ExtraTreesClassifier(n_estimators=600,n_jobs=-1)),
     ])
 print('pipe3 score:',np.mean(sklearn.cross_validation.cross_val_score(sub_pipe3, JSONtoString().transform(train), train_labels,cv=2,n_jobs=1)))
 

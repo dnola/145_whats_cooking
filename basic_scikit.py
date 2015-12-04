@@ -1,5 +1,3 @@
-__author__ = 'davidnola'
-
 import json
 
 import numpy as np
@@ -8,6 +6,8 @@ import sklearn.ensemble
 import sklearn.feature_extraction as skfe
 import sklearn.linear_model
 import sklearn.multiclass
+
+# Tutorial script to get team up to speed with state of the art machine learning techniques in Python. Not used in final submission.
 
 print('Start!')
 
@@ -18,7 +18,6 @@ with open('train.json') as f:
 with open('test.json') as f:
     data_test = json.loads(f.read())
 
-print("yo")
 
 # Go from JSON to bag of words in 6 lines of code because python is awesome
 train = [",".join([y.replace(' ','') for y in x['ingredients']]) for x in data_train]
@@ -117,7 +116,7 @@ with open('output.csv','w') as f:
 
 ########### POSTSCRIPT AND FINAL NOTES: ###################
 
-# scikit also does a bunch of other kickass stuff I didn't cover here, most importantly Pipelines
+# scikit also does a bunch of other cool stuff I didn't cover here, most importantly Pipelines
 # sklearn pipelines are dope. Look them up sometime. They basically let you stack a bunch of models, feature extraction, data augmentation,
 # etc together and essentially make your own 'metamodels' comprised of multiple scikit models, encoders, and transformers
 # One example of how pipelines could be useful here is that we stack the Vectorizer with another model, so we can use grid search to try and find the best number of max_features to use

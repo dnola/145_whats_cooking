@@ -1,5 +1,3 @@
-__author__ = 'davidnola'
-
 # This will only work if you have an Nvidia GPU with CUDA
 # You gotta install cuda first, then set an environment variable to the following before running this - (assuming a default cuda install)
 # You can set environment variables in PyCharm by going to MenuBar -> Run -> Edit Configurations -> Then click the ... next to environment variables
@@ -61,8 +59,6 @@ net = PipelineNet(
     maxout2_pool_size=2,
     dropout1_p=.1,
 
-
-
     # network hyperparams:
 
     on_epoch_finished=[EarlyStopping(),AdjustVariable('update_learning_rate', start=0.07, stop=0.0001),AdjustVariable('update_momentum', start=0.9, stop=0.99)],
@@ -79,7 +75,7 @@ net = PipelineNet(
 
 # Preprocessing pipeline
 pipe = skpipe.Pipeline([
-    ('stringify_json', JSONtoString(remove_spaces=False,use_stemmer=True,remove_symbols=True)),
+    ('stringify_json', JSONtoString(remove_spaces=False,use_stemmer=False,remove_symbols=True)),
     ('printer1', Printer()),
     ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
     ('printer2', Printer()),
@@ -88,7 +84,7 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.RandomizedSearchCV(pipe,{'clf__dense_num_units':[1000,2000,500,4000],
+model = sklearn.grid_search.RandomizedSearchCV(pipe,{'clf__dense_num_units':[1000,2000,500,4000,8000],
                                                      'clf__dense2_num_units':[500,200,1000],'encoder__max_df':[1.0,.8, .6],
                                                      'clf__dropout0_p':[.3,.1, 0],'clf__maxout_pool_size':[2,4],'clf__dropout1_p':[.3,.1, 0],'clf__maxout2_pool_size':[2,4],'stringify_json__use_stemmer':[True,False]},cv=2,n_jobs=1,verbose=10, n_iter=18)
 model.fit(train,train_labels)
@@ -100,7 +96,7 @@ print("Average score over 2 folds is:" , model.best_score_)
 
 preds = model.predict(test)
 
-pickle.dump(preds,open('net_predictions3.pkl','wb'))
+pickle.dump(preds,open('net_predictions_final.pkl','wb'))
 
 print("Best params::" , model.best_params_)
 
@@ -114,7 +110,7 @@ for idx,i in enumerate(ids):
     final_str+=","
     final_str+=preds[idx]
 
-with open('net_output.csv','w') as f:
+with open('net_output_final.csv','w') as f:
     f.write(final_str)
 
 print("Best params::" , model.best_params_)

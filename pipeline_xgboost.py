@@ -17,7 +17,7 @@ with open('test.json', encoding='utf-8') as f:
 
 train_labels = [x['cuisine'] for x in train]
 
-
+# This runs and caches the XGBoost model
 pipexg = skpipe.Pipeline([
     ('stringify_json', JSONtoString()),
     ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
@@ -28,4 +28,4 @@ pipexg = skpipe.Pipeline([
 print("Fitting pipeline:")
 # print('pipe score:',np.mean(sklearn.cross_validation.cross_val_score(pipe, train, train_labels,cv=2,n_jobs=-1,verbose=10))) #CV=2, so you will see each pipeline run 2 times
 pipexg.fit(train,train_labels)
-pickle.dump(pipexg.predict(test),open('pipexg_predictions.pkl','wb'))
+pickle.dump(pipexg.predict(test),open('pipexg_predictions_final.pkl','wb'))

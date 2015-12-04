@@ -1,6 +1,3 @@
-__author__ = 'davidnola'
-
-
 if __name__ == '__main__':
 
     import sklearn.pipeline as skpipe
@@ -10,7 +7,7 @@ if __name__ == '__main__':
     import json
     import pickle
 
-    # import my stuff from pipeline_helpers.py
+    # import stuff from pipeline_helpers.py
     from pipeline_helpers import JSONtoString
     # Load up data. We transform it inside the pipeline now, so no need to preprocess
     with open('train.json') as f:
@@ -27,7 +24,7 @@ if __name__ == '__main__':
         ('encoder',skfe.text.TfidfVectorizer(strip_accents='unicode',stop_words='english')),
         ('clf', sklearn.svm.LinearSVC()),
         ])
-
+    # Run a very large randomized search across most parameters available
     params0 = {
         'stringify_json__remove_spaces':[True,False],
         'encoder__ngram_range':[(1,1),(1,1),(1,2)],
@@ -51,5 +48,6 @@ if __name__ == '__main__':
         print("Current Params List:")
         for p in param_scores:
             print(p)
+        # Write list of our best overall parameters to disk while program continues to run - so we can stop it whenever we want
         pickle.dump(param_scores,open('param_scores.pkl','wb'))
 

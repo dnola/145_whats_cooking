@@ -1,4 +1,5 @@
-
+# A failed attempt at increasing our score by hyperparameter optimzizing each cuisine instead of coming up with a global set of hyperparameters.
+# Took too long to run - so unfortunately not a a part of our final solution or report.
 
 
 def do_single_fit(args):

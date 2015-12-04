@@ -1,7 +1,4 @@
-__author__ = 'davidnola'
-
 import pickle
-
 import numpy as np
 import sklearn.cluster
 import sklearn.feature_selection
@@ -10,7 +7,7 @@ from sklearn.cross_validation import train_test_split
 from sklearn.externals.six import iteritems
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 
-
+# Creates a stack ensemble - works similarly to voter ensemble, but takes an additional top level classifier as input
 class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
     def __init__(self, base_classifiers, stack_classifier,hold_out_percent = .90,categorical_labels=True,refit_base=True):
@@ -25,7 +22,7 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
 
     def fit(self, X, y=None):
-        if self.categorical:
+        if self.categorical: # Need to one hot encode labels
             label_encoder = LabelEncoder()
             one_hot = OneHotEncoder()
             label_encoder.fit(y)
@@ -55,7 +52,7 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
 
         return self
 
-    def predict(self, X):
+    def predict(self, X): # Run prediction and get best models in ensemble
         predictions = []
         for (name, clf) in self.base_classifiers:
             if self.categorical:
@@ -85,6 +82,7 @@ class StackEnsembleClassifier(BaseEstimator,ClassifierMixin):
             out.update(super(StackEnsembleClassifier, self).get_params(deep=False))
             return out
 
+# Loads a cached model
 class PredictionLoader(BaseEstimator):
     def __init__(self, filename):
         self.filename=filename
@@ -99,7 +97,7 @@ class PredictionLoader(BaseEstimator):
     def predict(self,X):
         return self.predictions
 
-
+# Pipeline transformer to turn data from a JSON object into a string - important because Count and TFIDF vectorizers both require strings
 class JSONtoString(BaseEstimator,TransformerMixin):
     def __init__(self,remove_spaces=False,use_stemmer=True,remove_symbols=True):
         self.remove_spaces = remove_spaces
@@ -127,6 +125,7 @@ class JSONtoString(BaseEstimator,TransformerMixin):
                 z = [",".join([",".join([lemma.lemmatize(yy) for yy in rem_sym(y).split(" ")]) for y in x['ingredients']]).lower() for x in data]
         return z
 
+# TFIDF and Count vectorizers return sparse matrices - this turns them into regular arrays
 class DeSparsify(BaseEstimator,TransformerMixin):
 #  Anything in the middle of a pipeline needs a fit and a transform,
 #  If its only gonna be used in the last step of the pipeline, it can be fit and a predict instead,
@@ -136,10 +135,12 @@ class DeSparsify(BaseEstimator,TransformerMixin):
     def transform(self, x):
         return x.toarray()
 
+# Wrapper to use DBScan in pipelines
 class DBScanTransformer(sklearn.cluster.DBSCAN):
     def transform(self, x):
         return self.fit_predict(x)
 
+# Prints out current state of transformed input in a pipeline
 class Printer(BaseEstimator,TransformerMixin):
     def __init__(self,silent=False):
         self.silent=silent

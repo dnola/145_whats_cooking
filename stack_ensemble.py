@@ -1,8 +1,6 @@
-__author__ = 'davidnola'
-
 """
 
-Currently the voter outperforms any configuration of a stack ensemble I can come up with
+Currently the voter outperforms any configuration of a stack ensemble we can come up with
 Which is sad because stack ensembles are cool when they work
 But they only work like half the time...
 
