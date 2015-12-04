@@ -65,14 +65,14 @@ net = PipelineNet(
 
     # network hyperparams:
 
-    on_epoch_finished=[EarlyStopping(),AdjustVariable('update_learning_rate', start=0.05, stop=0.0001),AdjustVariable('update_momentum', start=0.9, stop=0.99)],
+    on_epoch_finished=[EarlyStopping(),AdjustVariable('update_learning_rate', start=0.07, stop=0.0001),AdjustVariable('update_momentum', start=0.9, stop=0.99)],
  
     update=nesterov_momentum,
     update_learning_rate=theano.shared(float32(0.1)), # How much to scale current epochs gradient when updating weights - too high and you overshoot minimum
     update_momentum=theano.shared(float32(0.90)), # Use a some of last epoch's gradient as well when updating weights - too high and you overshoot minimum
  
     regression=True, # Always just set this to true. Even when you aren't doing regression.
-    max_epochs=750,
+    max_epochs=1000,
     verbose=1
     )
 
@@ -88,7 +88,7 @@ pipe = skpipe.Pipeline([
     ('clf', net),
     ])
 
-model = sklearn.grid_search.RandomizedSearchCV(pipe,{'clf__dense_num_units':[1000,2000,500],
+model = sklearn.grid_search.RandomizedSearchCV(pipe,{'clf__dense_num_units':[1000,2000,500,4000],
                                                      'clf__dense2_num_units':[500,200,1000],'encoder__max_df':[1.0,.8, .6],
                                                      'clf__dropout0_p':[.3,.1, 0],'clf__maxout_pool_size':[2,4],'clf__dropout1_p':[.3,.1, 0],'clf__maxout2_pool_size':[2,4],'stringify_json__use_stemmer':[True,False]},cv=2,n_jobs=1,verbose=10, n_iter=18)
 model.fit(train,train_labels)

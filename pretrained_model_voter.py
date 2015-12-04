@@ -106,7 +106,7 @@ sub_pipe3 = skpipe.Pipeline([
 # Now we put them together in an ensemble...
 base_layer = [
         ('net', net),
-        ('cusine',cuisine),
+        # ('cusine',cuisine),
         ('xg', pipexg),
         ('pipe0', sub_pipe0),
         ('pipe1', sub_pipe1),
@@ -116,7 +116,7 @@ base_layer = [
 
 # Most unnecessary pipeline ever...
 voter_pipeline = skpipe.Pipeline([
-    ('voter', sklearn.ensemble.VotingClassifier(base_layer,weights=[1,1,1,1,1,1,1])),
+    ('voter', sklearn.ensemble.VotingClassifier(base_layer,weights=[7,7,7,7,1,7])),
 ])
 print("Fitting voter...")
 voter_pipeline.fit(train,train_labels)
